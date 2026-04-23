@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dashboard</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        body { background: #f4f6f9; }
+        h2 { font-weight: bold; }
+
+        .card {
+            border-radius: 15px;
+            transition: 0.3s;
+        }
+
+        .card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+
+        .badge { font-size: 14px; }
+    </style>
+</head>
+
+<body>
+
+<div class="container mt-4">
+
+    <h2 class="text-center mb-4">📊 Lab Dashboard</h2>
+
+    <!-- NAVIGATION -->
+    <div class="text-end mb-3">
+        <a href="/inventory" class="btn btn-primary">📦 Inventory</a>
+        <a href="/admin_requests" class="btn btn-danger">📝 Admin Requests</a>
+        <a href="/student" class="btn btn-success">👨‍🎓 Student Page</a>
+        <a href="/" class="btn btn-secondary">🚪 Logout</a>
+    </div>
+
+    <!-- SUMMARY CARDS -->
+    <div class="row text-center mb-4">
+
+        <div class="col-md-3">
+            <div class="card shadow p-3 bg-primary text-white">
+                <h5>Total Components</h5>
+                <h3>{{ components|length }}</h3>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card shadow p-3 bg-success text-white">
+                <h5>Total Transactions</h5>
+                <h3>{{ transactions|length }}</h3>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card shadow p-3 bg-warning text-dark">
+                <h5>Pending Requests</h5>
+                <h3>{{ pending_requests }}</h3>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card shadow p-3 bg-info text-white">
+                <h5>Available Stock</h5>
+                <h3>{{ components|sum(attribute='quantity') }}</h3>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- GRAPH -->
+    <div class="card shadow p-4 mb-4">
+        <h5 class="text-center">📊 Issued vs Returned</h5>
+        <canvas id="myChart"></canvas>
+    </div>
+
+    <!-- COMPONENT LIST -->
+    <div class="card shadow p-4 mb-4">
+        <h5>📦 Components List</h5>
+
+        <table class="table table-striped">
+            <thead class="table-dark">
+                <tr>
+                    <th>Name</th>
+                    <th>Quantity</th>
+                    <th>Barcode</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for c in components %}
+                <tr>
+                    <td>{{ c.name }}</td>
+                    <td>
+                        {% if c.quantity == 0 %}
+                            <span class="badge bg-danger">Out</span>
+                        {% else %}
+                            <span class="badge bg-success">{{ c.quantity }}</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ c.barcode }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- TRANSACTIONS -->
+    <div class="card shadow p-4">
+        <h5>👨‍🎓 Recent Transactions</h5>
+
+        <table class="table table-bordered">
+            <thead class="table-primary">
+                <tr>
+                    <th>Student</th>
+                    <th>Admission No</th>
+                    <th>Component</th>
+                    <th>Action</th>
+                    <th>Date</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for t in transactions %}
+                <tr>
+                    <td>{{ t.student_name }}</td>
+                    <td>{{ t.admission_no }}</td>
+                    <td>{{ t.component_name }}</td>
+                    <td>
+                        {% if t.action == 'issued' %}
+                            <span class="badge bg-warning text-dark">Issued</span>
+                        {% else %}
+                            <span class="badge bg-info">Returned</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ t.date_time }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+</div>
+
+<!-- CHART -->
+<script>
+const ctx = document.getElementById('myChart');
+
+new Chart(ctx, {
+    type: 'bar',
+    data: {
+        labels: ['Issued', 'Returned'],
+        datasets: [{
+            label: 'Components',
+            data: [{{ issued_count }}, {{ returned_count }}],
+            borderWidth: 1
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: { legend: { display: false } }
+    }
+});
+</script>
+
+</body>
+</html>

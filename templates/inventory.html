@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Inventory</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+
+<body style="background: linear-gradient(135deg, #1e3c72, #2a5298); color:white;">
+<div class="container mt-4">
+
+    <h2>Inventory</h2>
+
+    <!-- Student Scan -->
+    <input type="text" id="studentScan" class="form-control mb-3" placeholder="Scan Student ID">
+    <div id="studentInfo" class="alert alert-info mt-2" style="display:none;"></div>
+
+    <!-- Component Scan -->
+    <input type="text" id="barcodeInput" placeholder="Scan Barcode Here" class="form-control mb-3">
+
+    <!-- Add Component -->
+    <form method="POST" action="/inventory">
+        <input name="name" placeholder="Component Name" required class="form-control mb-2">
+        <input name="quantity" placeholder="Quantity" required class="form-control mb-2">
+        <input name="barcode" placeholder="Barcode" required class="form-control mb-2">
+        <button class="btn btn-success">Add</button>
+    </form>
+
+    <table class="table table-light mt-3">
+        <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Qty</th>
+            <th>Action</th>
+        </tr>
+
+        {% for row in components %}
+        <tr>
+            <td>{{row.id}}</td>
+            <td>{{row.name}}</td>
+            <td>{{row.quantity}}</td>
+            <td>
+                <form action="/issue/{{ row.barcode }}" method="POST" class="d-inline actionForm">
+                    <button class="btn btn-warning btn-sm">Issue</button>
+                </form>
+
+                <form action="/return/{{ row.barcode }}" method="POST" class="d-inline actionForm">
+                    <button class="btn btn-success btn-sm">Return</button>
+                </form>
+
+                <a href="/delete/{{row.id}}" class="btn btn-dark btn-sm">Delete</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+
+</div>
+
+<script>
+let student = {};
+let timer;
+
+// ===== STUDENT SCAN =====
+document.getElementById("studentScan").addEventListener("input", function () {
+    let code = this.value;
+
+    fetch(`/get-student/${code}`)
+    .then(res => res.json())
+    .then(data => {
+        if(data.name){
+            student = data;
+
+            document.getElementById("studentInfo").style.display = "block";
+            document.getElementById("studentInfo").innerHTML =
+                `👤 ${data.name} | 🎓 ${data.admission_no} | 📧 ${data.email}`;
+        }
+    });
+});
+
+// ===== COMPONENT AUTOFILL =====
+document.getElementById("barcodeInput").addEventListener("input", function () {
+
+    clearTimeout(timer);
+
+    let code = this.value.trim();
+
+    timer = setTimeout(() => {
+
+        if (code.length < 3) return;
+
+        fetch(`/get-component/${code}`)
+        .then(res => res.json())
+        .then(data => {
+
+            if (data.name) {
+                document.querySelector("input[name='name']").value = data.name;
+                document.querySelector("input[name='quantity']").value = data.quantity;
+                document.querySelector("input[name='barcode']").value = code;
+
+                document.getElementById("barcodeInput").value = "";
+            }
+
+        });
+
+    }, 300);
+});
+
+// ===== ATTACH STUDENT DATA =====
+document.querySelectorAll(".actionForm").forEach(form => {
+    form.addEventListener("submit", function(e){
+
+        if(!student.email){
+            alert("⚠ Scan student first!");
+            e.preventDefault();
+            return;
+        }
+
+        this.innerHTML += `
+            <input type="hidden" name="email" value="${student.email}">
+            <input type="hidden" name="student_name" value="${student.name}">
+            <input type="hidden" name="admission_no" value="${student.admission_no}">
+        `;
+    });
+});
+</script>
+
+</body>
+</html>

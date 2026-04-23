@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin Panel</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        body {
+            background: #f4f6f9;
+        }
+
+        .card {
+            border-radius: 15px;
+        }
+
+        .table {
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .badge {
+            font-size: 13px;
+        }
+
+        .header {
+            background: linear-gradient(90deg, #ff416c, #ff4b2b);
+            color: white;
+            padding: 20px;
+            border-radius: 0 0 20px 20px;
+        }
+
+        .btn-action {
+            font-size: 12px;
+            padding: 5px 10px;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="header text-center">
+    <h2>🛠 Admin Request Panel</h2>
+</div>
+
+<div class="container mt-4">
+
+    <div class="card shadow p-4">
+
+        <h5 class="mb-3">All Student Requests</h5>
+
+        <div class="table-responsive">
+
+        <table class="table table-hover">
+
+            <thead class="table-dark">
+                <tr>
+                    <th>ID</th>
+                    <th>Student</th>
+                    <th>Email</th>
+                    <th>Class</th>
+                    <th>Component</th>
+                    <th>Purpose</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for r in data %}
+                <tr>
+                    <td>{{ r.id }}</td>
+                    <td>{{ r.student_name }}</td>
+                    <td>{{ r.student_email }}</td>
+                    <td>{{ r.student_class }}</td>
+                    <td>{{ r.component_name }}</td>
+                    <td>{{ r.purpose }}</td>
+
+                    <td>
+                        {% if r.status == 'Approved' %}
+                            <span class="badge bg-success">Approved</span>
+                        {% elif r.status == 'Rejected' %}
+                            <span class="badge bg-danger">Rejected</span>
+                        {% else %}
+                            <span class="badge bg-warning text-dark">Pending</span>
+                        {% endif %}
+                    </td>
+
+                    <td>
+                        <a href="/update_request/{{ r.id }}/Approved" class="btn btn-success btn-action">Approve</a>
+                        <a href="/update_request/{{ r.id }}/Rejected" class="btn btn-danger btn-action">Reject</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+
+        </table>
+
+        </div>
+
+    </div>
+
+</div>
+
+</body>
+</html>
